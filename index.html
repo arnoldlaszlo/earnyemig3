@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mozdonykereső - Holavonat.is (EMIG) - Dark Mode + Napsütés</title>
     
     <!-- Leaflet CSS -->
@@ -84,13 +84,8 @@
             background-color: #121212 !important;
         }
 
-        /* Csak az alaptérképeket invertáljuk sötét módra, a vasúti réteget nem */
-        .dark-base-tiles {
+        .leaflet-tile-pane {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-        }
-
-        .orm-dark-tiles {
-            filter: brightness(90%) contrast(115%);
         }
         
         .leaflet-bar {
@@ -164,9 +159,10 @@
         .filter-top-row { display: flex; gap: 5px; width: 100%; }
         .filter-top-row #btn-all { flex: 0 0 calc(25% - 3.75px); padding: 6px 0; font-size: 12px; }
 
+        /* 16px betűméret megakadályozza az iOS/mobil automatikus ránagyítást */
         .search-input {
-            background: #222; border: 1px solid #555; color: #fff; padding: 8px;
-            border-radius: 4px; flex: 1; box-sizing: border-box; font-size: 14px; min-width: 0;
+            background: #222; border: 1px solid #555; color: #fff; padding: 6px 8px;
+            border-radius: 4px; flex: 1; box-sizing: border-box; font-size: 16px; min-width: 0;
         }
         .search-input:focus { outline: none; border-color: #66b3ff; }
 
@@ -241,7 +237,8 @@
             #sun-overlay { width: 360px; height: 360px; }
             .control-btn { padding: 4px 8px; font-size: 12px; }
             .filter-top-row #btn-all { padding: 4px 0; font-size: 10px; }
-            .search-input { padding: 5px; font-size: 11px; }
+            /* Mobilon is marad a 16px betűméret a ránagyítás elkerülésére, de kisebb paddinggal */
+            .search-input { padding: 2px 6px; font-size: 16px; height: 28px; }
             .preset-btn { padding: 4px 0; font-size: 10px; }
             #timer-btn { width: 38px; text-align: center; }
             #uic-toggle { min-width: 36px; }
@@ -336,7 +333,6 @@
             const parts = huDateFormatter.formatToParts(new Date(timestampMs));
             const v = {};
             parts.forEach(p => v[p.type] = p.value);
-            // A magyar rövid napnevek végéről (pl. "Sze.") levágjuk az esetleges pontot
             const cleanWeekday = (v.weekday || '').replace('.', '');
             return {
                 year: v.year,
@@ -422,24 +418,9 @@
         L.DomEvent.disableClickPropagation(document.getElementById('filter-container'));
         L.DomEvent.disableClickPropagation(document.getElementById('top-controls'));
 
-        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap',
-            className: 'dark-base-tiles'
-        }).addTo(map);
-
-        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            maxZoom: 17,
-            attribution: '&copy; OpenTopoMap',
-            className: 'dark-base-tiles'
-        });
-
-        const ormLayer = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenRailwayMap',
-            className: 'orm-dark-tiles'
-        }).addTo(map);
-
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '&copy; OpenTopoMap' });
+        const ormLayer = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenRailwayMap' }).addTo(map);
         const sunDummyLayer = L.layerGroup(); 
 
         const baseMaps = { "Sötét Térkép (OSM)": osmLayer, "Sötét Topo Térkép": topoLayer };
@@ -485,9 +466,7 @@
                 addHungaryBorderToMap(data);
                 try {
                     localStorage.setItem(cacheKey, JSON.stringify(data));
-                } catch (e) {
-                    // Ha a pontos poligon túl nagy a localStorage-nak, nem gond
-                }
+                } catch (e) {}
             } catch (err) {
                 console.warn('Nominatim nem elérhető, tartalék határvonal betöltése.', err);
                 addHungaryBorderToMap(FALLBACK_HU_BORDER);
@@ -792,7 +771,6 @@
                     const activeDelay = delayProps.filter(t => activePresets.has(t));
                     if (activeDelay.length > 0) {
                         let delayMatch = false;
-                        // Csak a ténylegesen színes (nem tehervonat és vonatszámmal rendelkező) vonatokra szűrünk
                         if (hasTrainNumber && !isT) {
                             if (activePresets.has('Zöld') && delayMin < 5) delayMatch = true;
                             if (activePresets.has('Sárga') && delayMin >= 5 && delayMin < 15) delayMatch = true;
@@ -871,7 +849,6 @@
                     }
                 }
                 
-                // Csak valódi objektumokat tartunk meg (metaadatok/primitívek kiszűrése)
                 allLocomotives = locomotives.filter(item => item && typeof item === 'object' && !Array.isArray(item));
 
                 if (extractedTime) {
