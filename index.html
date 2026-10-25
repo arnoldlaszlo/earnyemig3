@@ -25,6 +25,7 @@
 
         /* --- FELSŐ ÓRA SÁV --- */
         #clock-bar {
+            position: relative;
             flex: 0 0 25px;
             width: 100%;
             background-color: #1a1a1a;
@@ -44,23 +45,122 @@
             background-color: #2a2a2a;
         }
 
-        /* --- FELSŐ SZŰRÉS ÉS TALÁLAT SÁV (AZ ÓRA ALATT) --- */
+        /* Bal oldali 'i' információs gomb a felső sávban */
+        #info-btn {
+            position: absolute;
+            left: 8px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #2a2a2a;
+            border: 1px solid #66b3ff;
+            color: #66b3ff;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 12px;
+            font-weight: bold;
+            font-style: italic;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        #info-btn:hover, #info-btn:active {
+            background-color: #66b3ff;
+            color: #121212;
+        }
+
+        /* --- INFÓ ABLAK (MODAL) --- */
+        #info-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.65);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #info-modal-overlay.show {
+            display: flex;
+        }
+
+        #info-modal {
+            background-color: #1e1e1e;
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 18px 22px;
+            max-width: calc(100vw - 40px);
+            width: 300px;
+            box-sizing: border-box;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+            color: #ffffff;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #info-modal a {
+            color: #66b3ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #info-modal a:hover {
+            text-decoration: underline;
+        }
+
+        #info-modal-close {
+            margin-top: 14px;
+            background: #2a2a2a;
+            border: 1px solid #555;
+            color: #ffffff;
+            border-radius: 4px;
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #info-modal-close:hover {
+            background: #3a3a3a;
+            border-color: #66b3ff;
+        }
+
+        /* --- FELSŐ SZŰRÉS ÉS TALÁLAT SÁV (KÉT SORBAN AZ ÓRA ALATT) --- */
         #filter-summary-bar {
-            flex: 0 0 22px;
+            flex: 0 0 auto;
             width: 100%;
             background-color: #151515;
             color: #66b3ff;
             font-family: monospace;
             font-size: 12px;
-            line-height: 22px;
+            line-height: 1.35;
             text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 0 10px;
+            padding: 3px 10px;
             box-sizing: border-box;
             border-bottom: 1px solid #333;
             z-index: 2000;
+        }
+
+        #filter-summary-text,
+        #filter-summary-count {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #filter-summary-count {
+            color: #e0e0e0;
+            font-weight: bold;
         }
 
         /* --- FŐ TARTALOM KONTÉNER --- */
@@ -193,16 +293,41 @@
             text-overflow: ellipsis;
         }
 
-        /* Második sor: Törlés gomb + Keresőmező */
+        /* Második sor: Törlés gomb + Keresőmező X gombbal */
         .filter-search-row { display: flex; gap: 5px; width: 100%; }
         .filter-search-row #btn-clear { flex: 0 0 calc(25% - 3.75px); padding: 6px 0; font-size: 12px; }
 
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+
         /* 16px betűméret megakadályozza az iOS/mobil automatikus ránagyítást */
         .search-input {
-            background: #222; border: 1px solid #555; color: #fff; padding: 6px 8px;
-            border-radius: 4px; flex: 1; box-sizing: border-box; font-size: 16px; min-width: 0;
+            background: #222; border: 1px solid #555; color: #fff; padding: 6px 28px 6px 8px;
+            border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 16px; min-width: 0;
         }
         .search-input:focus { outline: none; border-color: #66b3ff; }
+
+        .search-clear-x {
+            display: none;
+            position: absolute;
+            right: 4px;
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 16px;
+            line-height: 1;
+            padding: 4px 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .search-clear-x:hover, .search-clear-x:active {
+            color: #ffffff;
+        }
 
         .preset-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 100%; }
 
@@ -277,12 +402,13 @@
             .mode-btn { padding: 4px 2px !important; font-size: 10px !important; }
             .filter-search-row #btn-clear { padding: 4px 0; font-size: 10px; }
             /* Mobilon is marad a 16px betűméret a ránagyítás elkerülésére, de kisebb paddinggal */
-            .search-input { padding: 2px 6px; font-size: 16px; height: 28px; }
+            .search-input { padding: 2px 26px 2px 6px; font-size: 16px; height: 28px; }
+            .search-clear-x { font-size: 14px; padding: 2px 5px; }
             .preset-btn { padding: 4px 0; font-size: 10px; }
             #timer-btn { width: 38px; text-align: center; }
             #uic-toggle { min-width: 36px; }
             #clock-bar { font-size: 12px; }
-            #filter-summary-bar { font-size: 11px; }
+            #filter-summary-bar { font-size: 11px; padding: 2px 8px; }
             #status-bar { font-size: 11px; }
         }
     
@@ -292,8 +418,22 @@
 </head>
 <body>
 
-    <div id="clock-bar" onclick="hardRefresh()" title="Kattints a teljes oldal újratöltéséhez">Idő szinkronizálása...</div>
-    <div id="filter-summary-bar">Szűrés: Összes jármű | Találat: 0 db</div>
+    <div id="clock-bar" onclick="hardRefresh()" title="Kattints a teljes oldal újratöltéséhez">
+        <button type="button" id="info-btn" onclick="openInfoModal(event)" title="Információ">i</button>
+        <span id="clock-text">Idő szinkronizálása...</span>
+    </div>
+
+    <div id="info-modal-overlay" onclick="closeInfoModal(event)">
+        <div id="info-modal" onclick="event.stopPropagation()">
+            <div>Az adatok forrása a <a href="https://holavonat.is" target="_blank" rel="noopener noreferrer">holavonat.is</a></div>
+            <button type="button" id="info-modal-close" onclick="closeInfoModal(event)">Bezárás</button>
+        </div>
+    </div>
+
+    <div id="filter-summary-bar">
+        <div id="filter-summary-text">Szűrés: Összes jármű</div>
+        <div id="filter-summary-count">Találatok: 0 db</div>
+    </div>
 
     <div id="app-content">
         <div id="filter-container">
@@ -313,7 +453,7 @@
             </div>
             
             <div id="filter-panel">
-                <!-- 1. SOR: 4 új keresési mód gomb -->
+                <!-- 1. SOR: 4 keresési mód gomb -->
                 <div class="search-mode-row">
                     <button class="control-btn mode-btn active-filter" data-mode="series" onclick="setSearchMode('series', this)" title="Keresés csak a mozdonysorozatban (cccc)">Sorozat</button>
                     <button class="control-btn mode-btn" data-mode="uic" onclick="setSearchMode('uic', this)" title="Keresés a teljes pályaszámban">Pályaszám</button>
@@ -321,10 +461,13 @@
                     <button class="control-btn mode-btn" data-mode="station" onclick="setSearchMode('station', this)" title="Keresés az induló és célállomásokban">Állomás</button>
                 </div>
 
-                <!-- 2. SOR: Törlés gomb és beviteli mező -->
+                <!-- 2. SOR: Törlés gomb és beviteli mező X gombbal -->
                 <div class="filter-search-row">
                     <button id="btn-clear" class="control-btn preset-btn" onclick="clearAllFilters()">Törlés</button>
-                    <input type="text" id="search-input" class="search-input" placeholder="Sorozat (pl.: 431, 630...)" oninput="handleSearchInput()">
+                    <div class="search-input-wrapper">
+                        <input type="text" id="search-input" class="search-input" placeholder="Sorozat (pl.: 431, 43?...)" oninput="handleSearchInput()">
+                        <button type="button" id="search-clear-x" class="search-clear-x" onclick="clearSearchInputOnly()" title="Szöveg törlése">&#10005;</button>
+                    </div>
                 </div>
                 
                 <!-- 3. SOR+: Gyorsgombok (Presets) -->
@@ -343,6 +486,8 @@
                     <button class="control-btn preset-btn" onclick="togglePreset('418', this)">418</button>
                     <button class="control-btn preset-btn" onclick="togglePreset('43X', this)">43X</button>
                     <button class="control-btn preset-btn" onclick="togglePreset('T', this)" title="40000 és e feletti vonatszámok">T</button>
+                    <button class="control-btn preset-btn" onclick="togglePreset('Villamos', this)" title="Villamos mozdonyok és motorkocsik">Villamos</button>
+                    <button class="control-btn preset-btn" onclick="togglePreset('Dízel', this)" title="Dízel mozdonyok és motorkocsik">Dízel</button>
                 </div>
             </div>
         </div>
@@ -360,6 +505,91 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // ==========================================
+        // MOZDONYSOROZATOK ADATBÁZISA
+        // ==========================================
+        const LOCO_SERIES_DATA = [
+            { "loco_series": "0001", "loco_type": "Dízelmozdony", "loco_name": "Henschel", "loco_nick": "Viking" },
+            { "loco_series": "0117", "loco_type": "Dízel motorvonat", "loco_name": "Bzmot", "loco_nick": "Bz" },
+            { "loco_series": "0127", "loco_type": "Dízel motorvonat", "loco_name": "Bzmot", "loco_nick": "InterPici" },
+            { "loco_series": "0247", "loco_type": "Dízel motorvonat", "loco_name": "GySEV Jenbacher (szóló motorkocsi)", "loco_nick": "Jenbacher" },
+            { "loco_series": "0288", "loco_type": "Dízelmozdony", "loco_name": "M28", "loco_nick": "Mazsola" },
+            { "loco_series": "0408", "loco_type": "Dízelmozdony", "loco_name": "M40", "loco_nick": "Púpos" },
+            { "loco_series": "0414", "loco_type": "Villamos motorvonat", "loco_name": "BDVmot", "loco_nick": "Hernyó" },
+            { "loco_series": "0418", "loco_type": "Dízelmozdony", "loco_name": "M41", "loco_nick": "Csörgő" },
+            { "loco_series": "0430", "loco_type": "Villanymozdony", "loco_name": "GySEV V43", "loco_nick": "GySEV Szili" },
+            { "loco_series": "0431", "loco_type": "Villanymozdony", "loco_name": "MÁV V43.1", "loco_nick": "Szili" },
+            { "loco_series": "0432", "loco_type": "Villanymozdony", "loco_name": "MÁV V43.2", "loco_nick": "Papagáj" },
+            { "loco_series": "0433", "loco_type": "Villanymozdony", "loco_name": "MÁV V43.3", "loco_nick": "Cirmos" },
+            { "loco_series": "0434", "loco_type": "Villamos motorvonat", "loco_name": "BVmot", "loco_nick": "Samu" },
+            { "loco_series": "0438", "loco_type": "Dízelmozdony", "loco_name": "M47", "loco_nick": "Dácsia" },
+            { "loco_series": "0448", "loco_type": "Dízelmozdony", "loco_name": "M44", "loco_nick": "Bobó" },
+            { "loco_series": "0460", "loco_type": "Villanymozdony", "loco_name": "V46", "loco_nick": "Szöcske" },
+            { "loco_series": "0470", "loco_type": "Villanymozdony", "loco_name": "1047 / ES64U2", "loco_nick": "Taurus" },
+            { "loco_series": "0471", "loco_type": "Villanymozdony", "loco_name": "GySEV Vectron", "loco_nick": "Vectron" },
+            { "loco_series": "0478", "loco_type": "Dízelmozdony", "loco_name": "Remot M47", "loco_nick": "Dácsia" },
+            { "loco_series": "0480", "loco_type": "Villanymozdony", "loco_name": "TRAXX", "loco_nick": "TRAXX" },
+            { "loco_series": "0490", "loco_type": "Villanymozdony", "loco_name": "Alstom Astride", "loco_nick": "Astride" },
+            { "loco_series": "0628", "loco_type": "Dízelmozdony", "loco_name": "M62", "loco_nick": "Szergej" },
+            { "loco_series": "0630", "loco_type": "Villanymozdony", "loco_name": "V63", "loco_nick": "Gigant" },
+            { "loco_series": "1136", "loco_type": "Dízel motorvonat", "loco_name": "Iker Bzmot", "loco_nick": "IkerBz" },
+            { "loco_series": "1232", "loco_type": "Dízelmozdony", "loco_name": "BR 232", "loco_nick": "Ludmilla" },
+            { "loco_series": "1293", "loco_type": "Villanymozdony", "loco_name": "ÖBB Vectron", "loco_nick": "Vectron" },
+            { "loco_series": "1406", "loco_type": "Hibrid motorvonat (villamos-dízel)", "loco_name": "Stadler CityLink", "loco_nick": "Tram-train" },
+            { "loco_series": "1415", "loco_type": "Villamos motorvonat", "loco_name": "Stadler FLIRT", "loco_nick": "FLIRT" },
+            { "loco_series": "1416", "loco_type": "Dízel motorvonat", "loco_name": "Metrovagonmas 731.25", "loco_nick": "Uzsgyi" },
+            { "loco_series": "1425", "loco_type": "Villamos motorvonat", "loco_name": "Bombardier Talent", "loco_nick": "Talent" },
+            { "loco_series": "1426", "loco_type": "Dízel motorvonat", "loco_name": "Siemens Desiro", "loco_nick": "Desiro" },
+            { "loco_series": "1435", "loco_type": "Villamos motorvonat", "loco_name": "GySEV Stadler FLIRT", "loco_nick": "FLIRT" },
+            { "loco_series": "1446", "loco_type": "Dízel motorvonat", "loco_name": "GySEV Jenbacher (ikermotorkocsi)", "loco_nick": "Jenbacher" },
+            { "loco_series": "1488", "loco_type": "Vontatott jármű / Fűtőgép", "loco_name": "Villamos fűtőgép (VF, \"Rezsó\")", "loco_nick": "Rezsó" },
+            { "loco_series": "1815", "loco_type": "Villamos motorvonat", "loco_name": "Stadler KISS", "loco_nick": "KISS" },
+            { "loco_series": "2920", "loco_type": "Dízelmozdony", "loco_name": "Kisvasúti C-50", "loco_nick": "C-50" },
+            { "loco_series": "2948", "loco_type": "Dízelmozdony", "loco_name": "Kisvasúti Mk48", "loco_nick": "Mk48" },
+            { "loco_series": "5147", "loco_type": "Dízel motorvonat", "loco_name": "ÖBB/GySEV Jenbacher (ikermotorkocsi)", "loco_nick": "Jenbacher" },
+            { "loco_series": "6182", "loco_type": "Villanymozdony", "loco_name": "ES64U2", "loco_nick": "Taurus" },
+            { "loco_series": "6193", "loco_type": "Villanymozdony", "loco_name": "Siemens Vectron", "loco_nick": "Vectron" },
+            { "loco_series": "7193", "loco_type": "Villanymozdony", "loco_name": "Siemens Vectron", "loco_nick": "Vectron" },
+            { "loco_series": "8005", "loco_type": "Vontatott jármű", "loco_name": "Vezérlőkocsi (pl. \"Fecske\" vezérlő)", "loco_nick": "vezérlő" },
+            { "loco_series": "8055", "loco_type": "Vontatott jármű", "loco_name": "Vezérlőkocsi (Bmx, \"Hernyó\" vezérlő)", "loco_nick": "vezérlő" },
+            { "loco_series": "8076", "loco_type": "Vontatott jármű", "loco_name": "Vezérlőkocsi (Bmxtz, \"Samu\" vezérlő)", "loco_nick": "vezérlő" },
+            { "loco_series": "8276", "loco_type": "Dízelmozdony", "loco_name": "Kisvasúti Mk45 (Gyermekvasút)", "loco_nick": "Mk45" },
+            { "loco_series": "8443", "loco_type": "Dízel motorvonat", "loco_name": "Kisvasúti ABamot", "loco_nick": "ABamot" }
+        ];
+
+        const LOCO_SERIES_MAP = new Map(LOCO_SERIES_DATA.map(item => [item.loco_series, item]));
+
+        function getLocoSeriesInfo(uicParts) {
+            if (!uicParts) return null;
+            const padded = uicParts.cccc ? uicParts.cccc.padStart(4, '0') : '';
+            return LOCO_SERIES_MAP.get(uicParts.cccc) || LOCO_SERIES_MAP.get(padded) || null;
+        }
+
+        function isElectricLoco(seriesInfo) {
+            if (!seriesInfo || !seriesInfo.loco_type) return false;
+            const t = seriesInfo.loco_type.toLowerCase();
+            return t.includes('villany') || t.includes('villamos');
+        }
+
+        function isDieselLoco(seriesInfo) {
+            if (!seriesInfo || !seriesInfo.loco_type) return false;
+            const t = seriesInfo.loco_type.toLowerCase();
+            return t.includes('dízel') || t.includes('dizel');
+        }
+
+        // ==========================================
+        // INFÓ ABLAK KEZELÉSE
+        // ==========================================
+        function openInfoModal(event) {
+            if (event) event.stopPropagation();
+            document.getElementById('info-modal-overlay').classList.add('show');
+        }
+
+        function closeInfoModal(event) {
+            if (event) event.stopPropagation();
+            document.getElementById('info-modal-overlay').classList.remove('show');
+        }
+
         // ==========================================
         // PONTOS IDŐ (EUROPE/BUDAPEST) ÉS STÁTUSZ LOGIKA
         // ==========================================
@@ -422,7 +652,7 @@
             const nowMs = Date.now() + timeOffset;
             const nowParts = getBudapestParts(nowMs);
             
-            document.getElementById('clock-bar').innerText = `${nowParts.year}.${nowParts.month}.${nowParts.day}. ${nowParts.weekday} ${nowParts.hour}:${nowParts.minute}:${nowParts.second}`;
+            document.getElementById('clock-text').innerText = `${nowParts.year}.${nowParts.month}.${nowParts.day}. ${nowParts.weekday} ${nowParts.hour}:${nowParts.minute}:${nowParts.second}`;
 
             const statusBar = document.getElementById('status-bar');
             const referenceTime = lastDbUpdateTime !== null ? lastDbUpdateTime : appStartTime;
@@ -539,9 +769,11 @@
         const uicToggle = document.getElementById('uic-toggle');
         const mapEl = document.getElementById('map');
         const searchInput = document.getElementById('search-input');
+        const searchClearX = document.getElementById('search-clear-x');
         const colorToggleBtn = document.getElementById('color-toggle');
         const sunOverlay = document.getElementById('sun-overlay');
-        const filterSummaryBar = document.getElementById('filter-summary-bar');
+        const filterSummaryText = document.getElementById('filter-summary-text');
+        const filterSummaryCount = document.getElementById('filter-summary-count');
 
         // ==========================================
         // NAPSÜTÉS VIZUALIZÁCIÓ LOGIKÁJA
@@ -565,7 +797,6 @@
             const now = new Date(nowMs);
             const times = SunCalc.getTimes(now, center.lat, center.lng);
 
-            // Biztonsági ellenőrzés sarkköri vagy érvénytelen napkelte/napnyugta dátumokra
             if (!times.sunrise || !times.sunset || isNaN(times.sunrise.getTime()) || isNaN(times.sunset.getTime())) {
                 sunOverlay.innerHTML = '';
                 return;
@@ -661,48 +892,66 @@
         setInterval(updateSunVisuals, 60000);
 
         // ==========================================
-        // UIC PÁLYASZÁM (aa bb cccc eee-f) ÉS VONATSZÁM ELEMZÉS
+        // SEGÉDFÜGGVÉNYEK: ÉKEZETMENTESÍTÉS, WILDCARD, UIC ÉS VONATSZÁM
         // ==========================================
+        function removeAccents(str) {
+            return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        }
+
+        function hasWildcard(term) {
+            return term.includes('?') || term.includes('*');
+        }
+
+        function wildcardToRegExp(term, exact = true) {
+            const escaped = term.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+            const pattern = escaped.replace(/\?/g, '[^\\s]').replace(/\*/g, '.*');
+            return new RegExp(exact ? `^${pattern}$` : pattern, 'i');
+        }
+
         function parseUicParts(rawUic) {
             const rawStr = String(rawUic || '');
             const cln = rawStr.replace(/\D/g, '');
             let cccc = '';
+            let eee = '';
             let shortUic = rawStr || '???';
 
             if (cln.length === 12) {
-                // aa bb cccc eee-f -> cccc a 4..8 karakter
+                // aa bb cccc eee-f -> cccc: 4..8, eee: 8..11
                 cccc = cln.substring(4, 8);
-                shortUic = cln.charAt(4) === '8'
+                eee = cln.substring(8, 11);
+                shortUic = cln.charAt(4) !== '0'
                     ? cln.substring(4, 8) + ' ' + cln.substring(8, 11)
                     : cln.substring(5, 8) + ' ' + cln.substring(8, 11);
-            } else if (cln.length >= 7 && cln.charAt(0) === '8') {
+            } else if (cln.length >= 7 && cln.charAt(0) !== '0') {
                 cccc = cln.substring(0, 4);
+                eee = cln.substring(4, 7);
                 shortUic = cln.substring(0, 4) + ' ' + cln.substring(4, 7);
             } else if (cln.length === 7) {
                 cccc = cln.substring(0, 4);
+                eee = cln.substring(4, 7);
                 shortUic = cln.substring(1, 4) + ' ' + cln.substring(4, 7);
             } else if (cln.length === 6) {
                 cccc = '0' + cln.substring(0, 3);
+                eee = cln.substring(3, 6);
                 shortUic = cln.substring(0, 3) + ' ' + cln.substring(3, 6);
             } else {
                 cccc = cln.substring(0, 4);
             }
 
-            // 3 jegyű változat vezető nulla nélkül (pl. "0431" -> "431")
             const seriesNoZero = cccc.startsWith('0') ? cccc.substring(1) : cccc;
 
             return {
                 fullDigits: cln,
                 cccc: cccc,
                 series3: seriesNoZero,
-                shortUic: shortUic
+                eee: eee,
+                shortUic: shortUic,
+                shortUicNoSpace: shortUic.replace(/\s+/g, '')
             };
         }
 
         function parseTrainNumberInt(trainNumber) {
             if (trainNumber === null || trainNumber === undefined) return NaN;
-            // Összetett sztringek (pl. "S50 (2712)") esetén az utolsó számcsoportot vesszük,
-            // így nem fűződik össze a viszonylatszám a vonatszámmal.
             const groups = String(trainNumber).match(/\d+/g);
             if (!groups || groups.length === 0) return NaN;
             return parseInt(groups[groups.length - 1], 10);
@@ -718,8 +967,10 @@
             renderLocomotives(); 
         }
 
-        function getMavColor(delay, trainNumber) {
-            if (!useMavColors) return "#ffffff"; 
+        function getMavColor(delay, trainNumber, is1488 = false) {
+            if (!useMavColors) return "#ffffff";
+            if (is1488) return "#225f78"; // RAL 5009 Azúrkék (1488-as villamos fűtőmozdonyok)
+
             const hasTrainNumber = trainNumber !== 'Ismeretlen' && trainNumber.toString().trim() !== '';
             const trainNumInt = parseTrainNumberInt(trainNumber);
             const isFreightTrain = !isNaN(trainNumInt) && trainNumInt >= 40000;
@@ -733,16 +984,27 @@
 
         function toggleFilterPanel() { filterPanel.classList.toggle('show'); }
 
+        function updateSearchClearXVisibility() {
+            searchClearX.style.display = searchInput.value.length > 0 ? 'block' : 'none';
+        }
+
+        function clearSearchInputOnly() {
+            searchInput.value = '';
+            updateSearchClearXVisibility();
+            renderLocomotives();
+            searchInput.focus();
+        }
+
         function setSearchMode(mode, btnElement) {
             searchMode = mode;
             document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active-filter'));
             btnElement.classList.add('active-filter');
 
             const placeholders = {
-                series: 'Sorozat (pl.: 431, 630, 0418...)',
-                uic: 'Pályaszám (pl.: 9155, 431 001...)',
-                train: 'Vonatszám (pl.: 802, 45112...)',
-                station: 'Állomás (pl.: Keleti, Pécs...)'
+                series: 'Sorozat (pl.: 431, 43?...)',
+                uic: 'Pályaszám (pl.: 431 0??, 01?...)',
+                train: 'Vonatszám (pl.: 8??, 40*...)',
+                station: 'Állomás (pl.: bekescsaba, pecs...)'
             };
             searchInput.placeholder = placeholders[mode] || 'Keresés...';
             renderLocomotives();
@@ -753,10 +1015,12 @@
             activePresets.add('all');
             document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active-filter'));
             searchInput.value = '';
+            updateSearchClearXVisibility();
             renderLocomotives();
         }
 
         function handleSearchInput() {
+            updateSearchClearXVisibility();
             renderLocomotives();
         }
 
@@ -782,14 +1046,15 @@
             const hasPresets = !activePresets.has('all');
             const hasSearch = rawSearchText !== '';
 
+            filterSummaryCount.innerText = `Találatok: ${matchCount} db`;
+
             if (!hasPresets && !hasSearch) {
-                filterSummaryBar.innerText = `Szűrés: Összes jármű | Találat: ${matchCount} db`;
+                filterSummaryText.innerText = `Szűrés: Összes jármű`;
                 return;
             }
 
             let adjectives = [];
 
-            // 1. Késés jelzők
             const delayMap = {
                 'Zöld': 'pontos (<5p)',
                 'Sárga': '5-14p késésű',
@@ -799,7 +1064,6 @@
             const activeDelays = Object.keys(delayMap).filter(k => activePresets.has(k)).map(k => delayMap[k]);
             if (activeDelays.length > 0) adjectives.push(activeDelays.join(' / '));
 
-            // 2. Mozgás jelzők
             const moveMap = {
                 'Mozog': 'mozgó',
                 'Áll': 'álló'
@@ -807,7 +1071,13 @@
             const activeMoves = Object.keys(moveMap).filter(k => activePresets.has(k)).map(k => moveMap[k]);
             if (activeMoves.length > 0) adjectives.push(activeMoves.join(' / '));
 
-            // 3. Vonatszám jelzők
+            const tractionMap = {
+                'Villamos': 'villamos',
+                'Dízel': 'dízel'
+            };
+            const activeTractions = Object.keys(tractionMap).filter(k => activePresets.has(k)).map(k => tractionMap[k]);
+            if (activeTractions.length > 0) adjectives.push(activeTractions.join(' / '));
+
             const vszMap = {
                 'VSz': 'vonatszámmal rendelkező',
                 'NVSz': 'vonatszám nélküli',
@@ -816,7 +1086,6 @@
             const activeVsz = Object.keys(vszMap).filter(k => activePresets.has(k)).map(k => vszMap[k]);
             if (activeVsz.length > 0) adjectives.push(activeVsz.join(' / '));
 
-            // 4. Sorozat főnevek
             const seriesMap = {
                 '630': '630-asok',
                 '431': '431-esek',
@@ -835,7 +1104,6 @@
                 presetPhrase = `${adjectives.join(', ')} járművek`;
             }
 
-            // 5. Szabad szöveges keresés leírása
             let searchPhrase = '';
             if (hasSearch) {
                 const modeLabels = {
@@ -848,7 +1116,7 @@
             }
 
             const fullDescription = [presetPhrase, searchPhrase].filter(Boolean).join(' + ');
-            filterSummaryBar.innerText = `Szűrés: ${fullDescription} | Találat: ${matchCount} db`;
+            filterSummaryText.innerText = `Szűrés: ${fullDescription}`;
         }
 
         function toggleUIC() {
@@ -861,14 +1129,22 @@
 
         function manualRefresh() { timeLeft = UPDATE_INTERVAL; timerBtn.textContent = timeLeft; fetchLocomotiveData(); }
 
-        function createDirectionalIcon(heading, shortUic, delay, trainNumber, isMoving) {
+        function createDirectionalIcon(heading, shortUic, delay, trainNumber, isMoving, is1488 = false) {
             const parsedHeading = parseFloat(heading);
             const rotation = !isNaN(parsedHeading) ? parsedHeading : 0; 
-            const fillColor = getMavColor(delay, trainNumber);
-            const arrowElement = (isMoving === true) ? `
+            const fillColor = getMavColor(delay, trainNumber, is1488);
+
+            let innerSymbol = '';
+            if (is1488) {
+                // Áramütés veszélyére figyelmeztető táblákon szereplő (ISO 7010 W012) nyílban végződő villámjel
+                innerSymbol = `
+                <path d="M11.6 4.3 L14.8 4.3 L11.5 10.3 L15.6 9.5 L12.0 16.3 L13.8 16.5 L10.0 19.8 L8.7 15.2 L10.3 15.9 L12.1 11.5 L8.2 12.3 Z" fill="#222222"/>`;
+            } else if (isMoving === true) {
+                innerSymbol = `
                 <g transform="rotate(${rotation} 12 12)">
                     <path d="M12 4 L17 11 L13 11 L13 18 L11 18 L11 11 L7 11 Z" fill="#222222"/>
-                </g>` : '';
+                </g>`;
+            }
 
             const hasTr = trainNumber !== 'Ismeretlen' && trainNumber.toString().trim() !== '';
             const trText = `${hasTr ? trainNumber : '-'}, ${delay > 0 ? '+'+delay : '+0'}`;
@@ -877,7 +1153,7 @@
                 className: 'custom-div-icon',
                 html: `
                 <div style="position: relative; width: 24px; height: 24px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${fillColor}" stroke="#222222" stroke-width="2"/>${arrowElement}</svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${fillColor}" stroke="#222222" stroke-width="2"/>${innerSymbol}</svg>
                     <div class="info-bubble uic-bubble" style="border-color: ${fillColor}; color: ${fillColor};">${shortUic}</div><div class="info-bubble train-bubble" style="border-color: ${fillColor}; color: ${fillColor};">${shortUic}<br>${trText}</div>
                 </div>`,
                 iconSize: [24, 24], iconAnchor: [12, 12] 
@@ -898,7 +1174,6 @@
             allLocomotives.forEach(loco => {
                 if (!loco || typeof loco !== 'object') return;
 
-                // GPS koordináták validálása a szűrés és megjelenítés előtt
                 const rawLat = loco.lat !== undefined ? loco.lat : (loco.Lat !== undefined ? loco.Lat : (loco.latitude !== undefined ? loco.latitude : loco.Latitude));
                 const rawLon = loco.lon !== undefined ? loco.lon : (loco.lng !== undefined ? loco.lng : (loco.Lon !== undefined ? loco.Lon : (loco.Lng !== undefined ? loco.Lng : (loco.longitude !== undefined ? loco.longitude : loco.Longitude))));
                 const lat = parseFloat(rawLat);
@@ -907,12 +1182,14 @@
 
                 const uic = String(loco.uic || loco.UIC || 'Ismeretlen');
                 const uicParts = parseUicParts(uic);
+                const seriesInfo = getLocoSeriesInfo(uicParts);
+                const is1488 = uicParts.cccc === '1488' || uicParts.series3 === '1488';
+
                 const trainNumber = loco.trainNumber || loco.TrainNumber || loco.flight || 'Ismeretlen';
                 const hasTrainNumber = trainNumber !== 'Ismeretlen' && trainNumber.toString().trim() !== '';
                 const trainNumInt = parseTrainNumberInt(trainNumber);
                 const isT = !isNaN(trainNumInt) && trainNumInt >= 40000;
                 
-                // Mozgás állapot rugalmasabb típuskezelése
                 const rawMoving = loco.moving !== undefined ? loco.moving : loco.Moving;
                 const isMoving = rawMoving === true || rawMoving === 'true' || rawMoving === 1 || rawMoving === '1';
                 
@@ -920,7 +1197,6 @@
                 let match = true;
 
                 if (!activePresets.has('all')) {
-                    // Sorozatszám gyorsgombok: kizárólag a cccc (mozdonysorozat) rész alapján
                     const types = ['630', '431', '628', '418', '43X'];
                     const activeTypes = types.filter(t => activePresets.has(t));
                     if (activeTypes.length > 0) {
@@ -933,6 +1209,15 @@
                         if (activePresets.has('628') && (s3 === '628' || s4 === '0628')) typeMatch = true;
                         if (activePresets.has('418') && (s3 === '418' || s4 === '0418')) typeMatch = true;
                         if (!typeMatch) match = false;
+                    }
+
+                    const tractionProps = ['Villamos', 'Dízel'];
+                    const activeTraction = tractionProps.filter(t => activePresets.has(t));
+                    if (activeTraction.length > 0) {
+                        let tractionMatch = false;
+                        if (activePresets.has('Villamos') && isElectricLoco(seriesInfo)) tractionMatch = true;
+                        if (activePresets.has('Dízel') && isDieselLoco(seriesInfo)) tractionMatch = true;
+                        if (!tractionMatch) match = false;
                     }
 
                     const vszProps = ['VSz', 'NVSz', 'T'];
@@ -969,41 +1254,83 @@
                 }
                 if (!match) return;
 
-                // Szabad szöveges keresés a kiválasztott keresési mód alapján
+                // Szabad szöveges keresés (helyettesítő karakterekkel és ékezetfüggetlen állomáskereséssel)
                 if (searchTerms.length > 0) {
                     let textMatch = false;
-                    const fromStation = String(loco.from || loco.origin || '').toLowerCase();
-                    const toStation = String(loco.to || loco.destination || '').toLowerCase();
+                    const fromStationNorm = removeAccents(loco.from || loco.origin || '');
+                    const toStationNorm = removeAccents(loco.to || loco.destination || '');
 
                     for (const term of searchTerms) {
+                        const wildcardUsed = hasWildcard(term);
+
                         if (searchMode === 'series') {
-                            // Csak a cccc részben keres
-                            if (uicParts.cccc.toLowerCase().includes(term) || uicParts.series3.toLowerCase().includes(term)) {
-                                textMatch = true;
-                                break;
+                            if (wildcardUsed) {
+                                const rx = wildcardToRegExp(term, true);
+                                if (rx.test(uicParts.series3) || rx.test(uicParts.cccc)) {
+                                    textMatch = true;
+                                    break;
+                                }
+                            } else {
+                                if (uicParts.cccc.toLowerCase().includes(term) || uicParts.series3.toLowerCase().includes(term)) {
+                                    textMatch = true;
+                                    break;
+                                }
                             }
                         } else if (searchMode === 'uic') {
-                            // Teljes pályaszámban keres (formázott és nyers számjegyekben is)
-                            const cleanTermDigits = term.replace(/\D/g, '');
-                            if (
-                                uic.toLowerCase().includes(term) ||
-                                uicParts.shortUic.toLowerCase().includes(term) ||
-                                (cleanTermDigits.length > 0 && uicParts.fullDigits.includes(cleanTermDigits))
-                            ) {
-                                textMatch = true;
-                                break;
+                            if (wildcardUsed) {
+                                const rx = wildcardToRegExp(term, true);
+                                const rxNoSpace = wildcardToRegExp(term.replace(/\s+/g, ''), true);
+                                if (
+                                    rx.test(uic) ||
+                                    rx.test(uicParts.shortUic) ||
+                                    rxNoSpace.test(uicParts.shortUicNoSpace) ||
+                                    rxNoSpace.test(uicParts.fullDigits) ||
+                                    rx.test(uicParts.eee)
+                                ) {
+                                    textMatch = true;
+                                    break;
+                                }
+                            } else {
+                                const cleanTermDigits = term.replace(/\D/g, '');
+                                if (
+                                    uic.toLowerCase().includes(term) ||
+                                    uicParts.shortUic.toLowerCase().includes(term) ||
+                                    (cleanTermDigits.length > 0 && uicParts.fullDigits.includes(cleanTermDigits))
+                                ) {
+                                    textMatch = true;
+                                    break;
+                                }
                             }
                         } else if (searchMode === 'train') {
-                            // Csak a vonatszámban keres
-                            if (hasTrainNumber && String(trainNumber).toLowerCase().includes(term)) {
-                                textMatch = true;
-                                break;
+                            if (hasTrainNumber) {
+                                const trStr = String(trainNumber).trim();
+                                if (wildcardUsed) {
+                                    const rx = wildcardToRegExp(term, true);
+                                    const tokens = trStr.split(/[\s/()-]+/).filter(Boolean);
+                                    if (rx.test(trStr) || tokens.some(tok => rx.test(tok))) {
+                                        textMatch = true;
+                                        break;
+                                    }
+                                } else {
+                                    if (trStr.toLowerCase().includes(term)) {
+                                        textMatch = true;
+                                        break;
+                                    }
+                                }
                             }
                         } else if (searchMode === 'station') {
-                            // Csak az állomásokban (from / to) keres
-                            if (fromStation.includes(term) || toStation.includes(term)) {
-                                textMatch = true;
-                                break;
+                            const termNorm = removeAccents(term);
+                            if (wildcardUsed) {
+                                const rx = wildcardToRegExp(termNorm, false);
+                                if (rx.test(fromStationNorm) || rx.test(toStationNorm)) {
+                                    textMatch = true;
+                                    break;
+                                }
+                            } else {
+                                if (fromStationNorm.includes(termNorm) || toStationNorm.includes(termNorm)) {
+                                    textMatch = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1013,9 +1340,13 @@
                 matchCount++;
 
                 const heading = loco.heading !== undefined ? loco.heading : (loco.Heading !== undefined ? loco.Heading : loco.direction);
-                const marker = L.marker([lat, lon], { icon: createDirectionalIcon(heading, uicParts.shortUic, delayMin, trainNumber, isMoving) });
+                const marker = L.marker([lat, lon], { icon: createDirectionalIcon(heading, uicParts.shortUic, delayMin, trainNumber, isMoving, is1488) });
                 
-                marker.bindTooltip(`<div><b>UIC:</b> ${uic}<br><b>Vonat:</b> ${trainNumber}<br><b>Útvonal:</b> ${loco.from || loco.origin || '-'} &#10141; ${loco.to || loco.destination || '-'}<br><b>Késés:</b> ${delayMin > 0 ? '<span class="delay-warning">+'+delayMin+' perc</span>' : '0 perc'}</div>`, { className: 'train-tooltip', direction: 'top', offset: [0, -10], opacity: 1 });
+                const seriesLine = seriesInfo
+                    ? `<b>Jármű:</b> ${seriesInfo.loco_name} (${seriesInfo.loco_nick}) – ${seriesInfo.loco_type}<br>`
+                    : '';
+
+                marker.bindTooltip(`<div><b>UIC:</b> ${uic}<br>${seriesLine}<b>Vonat:</b> ${trainNumber}<br><b>Útvonal:</b> ${loco.from || loco.origin || '-'} &#10141; ${loco.to || loco.destination || '-'}<br><b>Késés:</b> ${delayMin > 0 ? '<span class="delay-warning">+'+delayMin+' perc</span>' : '0 perc'}</div>`, { className: 'train-tooltip', direction: 'top', offset: [0, -10], opacity: 1 });
                 marker.addTo(markerGroup);
             });
 
@@ -1071,8 +1402,6 @@
                 
                 allLocomotives = locomotives.filter(item => item && typeof item === 'object' && !Array.isArray(item));
 
-                // Ha az API küld időbélyeget, azt használjuk; egyébként sikeres lekéréskor
-                // frissítjük az időbélyeget, hogy változatlan adatoknál se riasszon tévesen pirossal.
                 if (extractedTime) {
                     lastDbUpdateTime = extractedTime;
                 } else {
