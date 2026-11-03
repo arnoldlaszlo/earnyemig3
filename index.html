@@ -361,7 +361,7 @@
         }
         .leaflet-tooltip-top.train-tooltip::before { border-top-color: rgba(30, 30, 30, 0.95); }
         .train-tooltip b { color: #66b3ff; }
-        .delay-warning { color: #ff5555; font-weight: bold; }
+        .delay-value { font-weight: bold; }
 
         .custom-div-icon { overflow: visible !important; }
         
@@ -419,8 +419,13 @@
             outline: 3px solid #ffcf40; outline-offset: 2px;
         }
         button:disabled { cursor: wait; opacity: 0.7; }
-        #clock-bar { cursor: default; }
-        #clock-bar:hover { background-color: #1a1a1a; }
+        #clock-reset {
+            width: 100%; height: 100%; padding: 0 34px;
+            border: 0; background: transparent; color: inherit; font: inherit;
+            cursor: pointer;
+        }
+        #clock-reset:focus-visible { outline-offset: -3px; }
+        #info-btn { z-index: 1; }
         #connection-message {
             flex: 0 0 auto; padding: 6px 10px; color: #ffe6b0; background: #493413;
             text-align: center; font-size: 12px; overflow-wrap: anywhere;
@@ -452,7 +457,9 @@
 
     <div id="clock-bar">
         <button type="button" id="info-btn" aria-haspopup="dialog" aria-controls="info-modal" onclick="openInfoModal(event)" title="Információ">i</button>
-        <span id="clock-text">Idő szinkronizálása...</span>
+        <button type="button" id="clock-reset" onclick="hardRefresh()" title="Teljes újratöltés és minden szűrő, színezés, beállítás alaphelyzetbe állítása" aria-label="Teljes újratöltés és alaphelyzetbe állítás">
+            <span id="clock-text">Idő szinkronizálása...</span>
+        </button>
     </div>
 
     <div id="info-modal-overlay" onclick="closeInfoModal(event)">
@@ -497,7 +504,7 @@
                 <div class="filter-search-row">
                     <button type="button" id="btn-clear" class="control-btn preset-btn" onclick="clearAllFilters()">Törlés</button>
                     <div class="search-input-wrapper">
-                        <input type="text" id="search-input" aria-label="Járművek keresése" maxlength="200" class="search-input" placeholder="Sorozat (pl.: 431, 43?...)" oninput="handleSearchInput()">
+                        <input type="text" id="search-input" autocomplete="off" aria-label="Járművek keresése" maxlength="200" class="search-input" placeholder="Sorozat (pl.: 431, 43?...)" oninput="handleSearchInput()">
                         <button type="button" id="search-clear-x" class="search-clear-x" onclick="clearSearchInputOnly()" title="Szöveg törlése">&#10005;</button>
                     </div>
                 </div>
@@ -701,7 +708,11 @@
             };
         }
         
-        function hardRefresh() { window.location.reload(); }
+        function hardRefresh() {
+            // A böngésző ne állíthassa vissza az előző keresőszöveget újratöltéskor.
+            document.getElementById('search-input').value = '';
+            window.location.reload();
+        }
 
         async function syncTimeWithNTP() {
             // HTTP-időszinkron: a hálózati út felével korrigálva; hiba esetén helyi óra.
@@ -853,6 +864,7 @@
         const uicToggle = document.getElementById('uic-toggle');
         const mapEl = document.getElementById('map');
         const searchInput = document.getElementById('search-input');
+        searchInput.value = ''; // Minden teljes betöltés alaphelyzetből indul.
         const searchClearX = document.getElementById('search-clear-x');
         const colorToggleBtn = document.getElementById('color-toggle');
         const sunOverlay = document.getElementById('sun-overlay');
@@ -1134,12 +1146,24 @@
             renderLocomotives(); 
         }
 
+        // A jelölők és a késésértékek ugyanazokat a színhatárokat használják.
+        function getDelayColor(delay) {
+            return delay < 5 ? '#4caf50' : delay < 15 ? '#ffeb3b' : delay < 60 ? '#ff9800' : '#f44336';
+        }
+
+        function formatTooltipDelay(delay) {
+            if (delay === null) return 'Ismeretlen';
+            if (delay < 0) return `${delay} perc`;
+            const value = delay > 0 ? `+${delay}` : '0';
+            return `<span class="delay-value" style="color: ${getDelayColor(delay)}">${value}</span> perc`;
+        }
+
         function getMavColor(delay, trainNumber, is1488 = false) {
             if (!useMavColors) return '#ffffff';
             if (is1488) return '#225f78';
             const numbers = parseTrainNumbers(trainNumber);
             if (!numbers.length || numbers.some(n => n >= 40000) || delay === null) return '#888888';
-            return delay < 5 ? '#4caf50' : delay < 15 ? '#ffeb3b' : delay < 60 ? '#ff9800' : '#f44336';
+            return getDelayColor(delay);
         }
 
         function closeFilterPanel() {
@@ -1501,9 +1525,8 @@
                 visibleKeys.add(loco._key);
                 const signature = JSON.stringify([heading, uicParts.shortUic, delayMin, trainNumber, isMoving, is1488, useMavColors]);
                 const seriesLine = seriesInfo ? `<b>Jármű:</b> ${escapeHtml(seriesInfo.loco_name)} (${escapeHtml(seriesInfo.loco_nick)}) – ${escapeHtml(seriesInfo.loco_type)}<br>` : '';
-                const delayText = delayMin === null ? 'Ismeretlen' : delayMin > 0 ? `<span class="delay-warning">+${delayMin} perc</span>` : delayMin < 0 ? `${delayMin} perc (siet)` : '0 perc';
-                const movementText = isMoving === null ? 'Ismeretlen' : isMoving ? 'Mozog' : 'Áll';
-                const tooltip = `<div><b>UIC:</b> ${escapeHtml(uic)}<br>${seriesLine}<b>Vonat:</b> ${escapeHtml(trainNumber)}<br><b>Útvonal:</b> ${escapeHtml(loco.from || '-')} &#10141; ${escapeHtml(loco.to || '-')}<br><b>Késés:</b> ${delayText}<br><b>Mozgás:</b> ${movementText}</div>`;
+                const delayText = formatTooltipDelay(delayMin);
+                const tooltip = `<div><b>UIC:</b> ${escapeHtml(uic)}<br>${seriesLine}<b>Vonat:</b> ${escapeHtml(trainNumber)}<br><b>Útvonal:</b> ${escapeHtml(loco.from || '-')} &#10141; ${escapeHtml(loco.to || '-')}<br><b>Késés:</b> ${delayText}</div>`;
                 let entry = markerCache.get(loco._key);
                 if (!entry) {
                     const marker = L.marker([lat, lon], { icon: createDirectionalIcon(heading, uicParts.shortUic, delayMin, trainNumber, isMoving, is1488), title: `${uicParts.shortUic} – ${trainNumber}` });
