@@ -1155,7 +1155,7 @@
             if (delay === null) return 'Ismeretlen';
             if (delay < 0) return `${delay} perc`;
             const value = delay > 0 ? `+${delay}` : '0';
-            return `<span class="delay-value" style="color: ${getDelayColor(delay)}">${value}</span> perc`;
+            return `<span class="delay-value" style="color: ${getDelayColor(delay)}">${value} perc</span>`;
         }
 
         function getMavColor(delay, trainNumber, is1488 = false) {
